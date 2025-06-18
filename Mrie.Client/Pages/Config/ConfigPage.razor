@@ -1,0 +1,93 @@
+﻿@page "/config"
+@using Microsoft.AspNetCore.Authorization
+@using Mrie.Client.Pages.Config.Modules.Signups
+@using Mrie.Client.Pages.Config.Modules.LabRador
+@using Mrie.Client.Pages.Config.Modules.Generic
+@using Mrie.Shared.Permissions
+@inject HttpClient Http
+
+<PageTitle>Config</PageTitle>
+
+@attribute [Authorize]
+<AuthorizeView>
+    <Authorized>
+        <MudPaper Class="pa-4" Elevation="0">
+            <MudTabs Class="ml-8 mr-8" @bind-ActivePanelIndex="_activeTabIndex" KeepPanelsAlive="true">
+                <MudDivider Class="mb-4"/>
+                <MudTabPanel Text="Info">
+                    <MudText Typo="Typo.h6">Mrie Config</MudText>
+                    <MudText Class="mt-4">Welcome to the config panel for Mrie. The panels above will allow you to access a specific part of Mrie's configuration, if you are authorized to use them.</MudText>
+                </MudTabPanel>
+                @if (_permissions.TryGetValue(PermissionType.UrlShortener, out bool allowed) && allowed)
+                {
+                    <MudTabPanel Text="Url Shortener">
+                        <UrlShortenerConfigComponent/>
+                    </MudTabPanel>
+                }
+                @*@if (IsAuthorized(PermissionType.Signups))
+                {
+                @*<MudTabPanel Text="Signups">
+                        <SignupsConfigComponent/>
+                    </MudTabPanel>
+                }*@
+
+
+                @if (_permissions.TryGetValue(PermissionType.ManageApps, out allowed) && allowed)
+                {
+                    <MudTabPanel Text="LabRador">
+                        <LabRadorConfigComponent/>
+                    </MudTabPanel>
+
+
+                    <MudTabPanel Text="General">
+                        <OtherConfigComponent/>
+                    </MudTabPanel>
+
+                    <MudTabPanel Text="Tokens">
+                        <Mrie.Client.Pages.Config.Modules.AccessTokens.AccessTokenConfigComponent></Mrie.Client.Pages.Config.Modules.AccessTokens.AccessTokenConfigComponent>
+                    </MudTabPanel>
+                }
+
+                @if (_permissions.TryGetValue(PermissionType.ManageUsers, out allowed) && allowed)
+                {
+                    <MudTabPanel Text="Users">
+                        <UserManagerConfigComponent/>
+                    </MudTabPanel>
+                }
+                <!-- Add additional MudTabPanels for more modules as needed -->
+            </MudTabs>
+        </MudPaper>
+    </Authorized>
+    <NotAuthorized>
+        <MudText Color="Color.Error" Typo="Typo.h6">
+            You must be logged in to access this page.
+        </MudText>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    private int _activeTabIndex = 0;
+
+    private Dictionary<PermissionType, bool> _permissions = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var allPermissions = Enum.GetValues<PermissionType>()
+            .ToArray();
+
+        var tasks = allPermissions
+            .ToDictionary(
+                perm => perm,
+                perm => Http.GetFromJsonAsync<bool>($"api/v2/permissions/{perm}")
+            );
+
+        await Task.WhenAll(tasks.Values);
+
+        _permissions = tasks.ToDictionary(
+            kvp => kvp.Key,
+            kvp => kvp.Value.Result
+        );
+        StateHasChanged();
+    }
+
+}

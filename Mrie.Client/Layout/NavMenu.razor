@@ -1,0 +1,74 @@
+﻿@using Mrie.Shared.Permissions
+@implements IAsyncDisposable
+
+@inject NavigationManager NavigationManager
+@inject MobileService Mobile
+@inject HttpClient Http
+
+<MudNavMenu>
+    <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">Home</MudNavLink>
+    <AuthorizeView>
+        <Authorized>
+            @if (Mobile.IsMobile)
+            {
+                <MudNavLink Class="" Href="Account/Manage" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Person">Account</MudNavLink>
+                <form action="Account/Logout" method="post">
+                    <AntiforgeryToken/>
+                    <input type="hidden" name="ReturnUrl" value="@currentUrl"/>
+                    <button type="submit" class="mud-nav-link mud-ripple">
+                        <MudIcon Icon="@Icons.Material.Filled.Logout" Class="mr-3 mb-6"></MudIcon> Logout
+                    </button>
+                </form>
+            }
+            <MudNavLink Href="labrador" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Pets">LabRador AI</MudNavLink>
+            @if (HasZorroAccess)
+            {
+                <MudNavLink Href="zorro" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Download">Zorro</MudNavLink>
+            }
+            <MudNavLink Href="prayertimes/default" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Mosque">Prayer Times</MudNavLink>
+
+            @if (HasConfigPermission)
+            {
+                <MudNavLink Href="config" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Settings">Config</MudNavLink>
+            }
+        </Authorized>
+        <NotAuthorized>
+            @if (Mobile.IsMobile)
+            {
+                <MudNavLink Href="Account/Register" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Person">Register</MudNavLink>
+                <MudNavLink Href="Account/Login" Class="mb-6" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Password">Login</MudNavLink>
+            }
+            <MudNavLink Href="prayertimes/default" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Mosque">Prayer Times</MudNavLink>
+        </NotAuthorized>
+    </AuthorizeView>
+</MudNavMenu>
+
+
+@code {
+    private string? currentUrl;
+    public bool HasConfigPermission = false;
+    public bool HasZorroAccess = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        currentUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+        NavigationManager.LocationChanged += OnLocationChanged;
+        await Mobile.EnsureInitializedAsync();
+        Mobile.OnViewportChanged += StateHasChanged;
+        HasConfigPermission = await Http.GetFromJsonAsync<bool>($"api/v2/permissions/{PermissionType.ManageApps}");
+        HasZorroAccess = await Http.GetFromJsonAsync<bool>($"api/v2/permissions/{PermissionType.Zorro}");
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        currentUrl = NavigationManager.ToBaseRelativePath(e.Location);
+        StateHasChanged();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        NavigationManager.LocationChanged -= OnLocationChanged;
+        Mobile.OnViewportChanged -= StateHasChanged;
+        await Mobile.DisposeAsync();
+    }
+}

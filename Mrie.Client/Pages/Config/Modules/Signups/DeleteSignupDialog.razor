@@ -1,0 +1,38 @@
+﻿@using Mrie.Shared.Modals.Signups
+
+@inject HttpClient Http
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <TitleContent>
+        Confirmation
+    </TitleContent>
+    <DialogContent>
+        Are you sure you want to delete the @Signup.Id signup?
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton OnClick="Confirm" Variant="Variant.Filled" Color="Color.Error">Delete</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] public IMudDialogInstance MudDialog { get; set; }
+    public SignupObject Signup { get; set; } = SignupObject.CreateDefault();
+    [Parameter] public string SignupId { get; set; } = "TEMPORARY";
+
+    protected override async Task OnInitializedAsync()
+    {
+        Signup = await Http.GetFromJsonAsync<SignupObject>($"api/Signups/signup?id={Uri.EscapeDataString(SignupId)}");
+    }
+
+    public void Cancel()
+        => MudDialog.Cancel();
+
+    public async Task Confirm()
+    {
+        var result = await Http.DeleteFromJsonAsync<object>("api/Signups/deletesignup?id="+Uri.EscapeDataString(Signup.Id));
+        Snackbar.Add("Signup Deleted", Severity.Success);
+        MudDialog.Close();
+    }
+}

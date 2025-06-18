@@ -1,0 +1,120 @@
+﻿@page "/prayertimes/{Masjid}"
+@using Mrie.Shared.Modals
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject MobileService Mobile
+
+<PageTitle>Prayer Times</PageTitle>
+<MudText Typo="Typo.h3" Class="mb-2" Align="Align.Center">Prayer Times Utility</MudText>
+<MudText Typo="Typo.body1" Class="mb-7" Align="Align.Center">Fetched automatically using <a style="color: dodgerblue" href="https://mawaqit.net/en/m/@Masjid">Mawaqit</a> prayer times.</MudText>
+
+<MudStack>
+    <MudPaper Elevation="0" Class="mr-5">
+        <MudText Typo="Typo.h6" Class="mb-3">Prayer Times</MudText>
+        <MudText Typo="Typo.body1" Class="mb-1"><b>Fajr</b>: @StylizeTime(TimesToday.Fajr)</MudText>
+        <MudText Typo="Typo.body1" Class="mb-1"><b>Shuruq</b>: @StylizeTime(TimesToday.Shuruq)</MudText>
+        <MudText Typo="Typo.body1" Class="mb-1"><b>Dhuhr</b>: @StylizeTime(TimesToday.Dhuhr)</MudText>
+        <MudText Typo="Typo.body1" Class="mb-1"><b>Asr</b>: @StylizeTime(TimesToday.Asr)</MudText>
+        <MudText Typo="Typo.body1" Class="mb-1"><b>Maghreb</b>: @StylizeTime(TimesToday.Maghreb)</MudText>
+        <MudText Typo="Typo.body1" Class="mb-8"><b>Isha</b>: @StylizeTime(TimesToday.Isha)</MudText>
+
+        <MudText Typo="Typo.h6" Class="mb-3">Night Calculator</MudText>
+        <MudText Typo="Typo.body1" Class="mb-1"><b>Midnight</b>: @(StylizeDate(Midnight))</MudText>
+        <MudText Typo="Typo.body1" Class="mb-8"><b>Last Third</b>: @(StylizeDate(Third))</MudText>
+        <MudDivider/>
+        <MudText Typo="Typo.h6" Class="mt-8">Choose Masjid</MudText>
+
+        @if (Mobile.IsMobile)
+        {
+            <MudText Typo="Typo.body1" Class="mr-3 mt-2"><b>Masjid</b>: @Masjid</MudText>
+        }
+        <MudStack Row="true" AlignItems="AlignItems.Center">
+            <MudTextField @bind-Value="NewMasjid" Label="Use another Masjid" HelperText="Must be the Mawaqit ID of the masjid." HelperTextOnFocus="true"/>
+            <MudIconButton Icon="@Icons.Material.Filled.Link" @onclick="Redirect"/>
+            @if (!Mobile.IsMobile)
+            {
+                <MudText Typo="Typo.body1" Class="ml-3"><b>Masjid</b>: @Masjid</MudText>
+            }
+
+        </MudStack>
+    </MudPaper>
+
+</MudStack>
+
+@code {
+    public TimeSpan Difference => FajrTomorrow - MaghrebToday;
+    public DateTime Midnight => MaghrebToday.Add(Difference / 2);
+    public DateTime Third => MaghrebToday.Add(Difference * 2 / 3);
+}
+
+@code {
+    [Parameter] public string Masjid { get; set; }
+    public PrayerTimesData TimesToday { get; set; } = new();
+    public PrayerTimesData TimesTomorrow { get; set; } = new();
+    public DateTime MaghrebToday { get; set; }
+    public DateTime FajrTomorrow { get; set; }
+    
+    public string NewMasjid { get; set; }
+
+    public async Task Redirect()
+    {
+        Masjid = NewMasjid;
+        Navigation.NavigateTo("prayertimes/" + Masjid);
+        await OnAfterRenderAsync(true);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+            return;
+
+        try
+        {
+            // dont really remember how this works
+            // all of the offset below is for the "Today at [...]" to work correctly
+            if (Masjid == "default" || string.IsNullOrEmpty(Masjid))
+            {
+                Masjid = await Http.GetStringAsync("api/v2/prayertimes/default");
+                Navigation.NavigateTo($"prayertimes/{Masjid}");
+            }
+
+            var now = DateTime.Now;
+            TimesToday = (await Http.GetFromJsonAsync<PrayerTimesData>($"api/v2/prayertimes/{Masjid}/{now.Day}/{now.Month}")).ToLocalTime();
+
+            int todayOffset = 0;
+            if (now < TimesToday.Fajr)
+                todayOffset = -1;
+            
+            var newToday = DateTime.Today.AddDays(todayOffset);
+            var tomorrow = DateTime.Today.AddDays(todayOffset + 1);
+
+            var tempToday = (await Http.GetFromJsonAsync<PrayerTimesData>($"api/v2/prayertimes/{Masjid}/{newToday.Day}/{newToday.Month}")).ToLocalTime();
+            TimesTomorrow = (await Http.GetFromJsonAsync<PrayerTimesData>($"api/v2/prayertimes/{Masjid}/{tomorrow.Day}/{tomorrow.Month}")).ToLocalTime();
+
+            MaghrebToday = newToday.Add(tempToday.Maghreb.TimeOfDay);
+            FajrTomorrow = tomorrow.Add(TimesTomorrow.Fajr.TimeOfDay);
+            StateHasChanged();
+        }
+        catch (Exception e)
+        {
+            var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small };
+            await (await DialogService.ShowAsync<ErrorDialog>("Error", options)).Result;
+            Masjid = "default";
+            await OnAfterRenderAsync(true);
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Mobile.EnsureInitializedAsync();
+        Mobile.OnViewportChanged += StateHasChanged;
+    }
+
+    public string StylizeTime(DateTime inputTimeSpan)
+        => DateTime.Today.Add(inputTimeSpan.TimeOfDay).ToString("h:mm tt");
+    
+    public string StylizeDate(DateTime inputDateTime)
+        => (inputDateTime.Date == DateTime.Now.Date ? "Today at " : "Tomorrow at ") + inputDateTime.ToString("h:mm tt");
+}

@@ -1,0 +1,29 @@
+﻿@using Mrie.Shared.Modals.Signups
+
+@inject HttpClient Http
+@inject ISnackbar Snackbar
+@inject NavigationManager Navigation
+
+<MudDialog>
+    <TitleContent>
+        Access Token
+    </TitleContent>
+    <DialogContent>
+        Here is your token: <b>@Token</b>
+        Warning: This token is sensitive and should be treated like a password. Do not share it with anyone. You will not be able to see it again.
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Confirm" Variant="Variant.Filled" Color="Color.Primary">GOT IT</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] public IMudDialogInstance MudDialog { get; set; }
+    [Parameter] public string Token { get; set; }
+
+
+    public async Task Confirm()
+    {
+        MudDialog.Close();
+    }
+}

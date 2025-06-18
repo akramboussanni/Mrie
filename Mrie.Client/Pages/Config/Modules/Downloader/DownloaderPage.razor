@@ -1,0 +1,180 @@
+﻿@page "/zorro"
+@using Mrie.Shared.Modals.Downloader
+@using Mrie.Shared.Modals.LabRador
+@using Mrie.Shared.Permissions
+@using Mrie.Client.Services;
+@using MudBlazor
+
+@inject HttpClient Http
+@inject IDialogService DialogService
+@inject ISnackbar Snack
+@inject IJSRuntime JS
+@inject NavigationManager Navigation
+@inject MobileService Mobile
+
+<MudText Align="Align.Center" Typo="Typo.h3">Zorro</MudText>
+<MudText Align="Align.Center" Typo="Typo.body1">Media Ripper - Download video or audio from YouTube, Instagram, TikTok, and 100+ more platforms.<br/>Just put a link to get started.</MudText>
+
+<MudStack Row="true" Class="mt-3">
+    <MudTextField Label="Video URL" HelperText="e.g. https://youtube.com/watch?v=MKyQecXytoE" HelperTextOnFocus="true" @bind-Value="Url"/>
+    <MudIconButton Color="Color.Primary" @onclick="OnSearch" Icon="@Icons.Material.Filled.Search"/>
+</MudStack>
+
+<MudStack Row="true" Class="mt-7">
+    @if (ShowKeep)
+    {
+        <MudMenu Icon="@Icons.Material.Filled.MoreVert" Label="Actions" Class="ml-3">
+            <MudSwitch @bind-Value="Keep" Label="Keep file on server?" Class="mt-2 pa-2"/>
+            @if (Keep)
+            {
+                <MudSwitch @bind-Value="Return" Label="Download file?" Class="mt-2 pa-2"/>
+            }
+            <MudSwitch @bind-Value="FastRip" Label="FastRip" Class="mt-2 pa-2"/>
+        </MudMenu>
+
+    }
+
+    <MudSelect T="MediaType" Label="Choose media type" @bind-Value="MediaType">
+        @foreach (var value in Enum.GetValues(typeof(MediaType)).Cast<MediaType>())
+        {
+            <MudSelectItem Value="value">@value.ToString()</MudSelectItem>
+        }
+    </MudSelect>
+</MudStack>
+@if (Ongoing)
+{
+    <MudStack Row="true" Class="mt-3">
+        <MudProgressCircular Color="Color.Default" Indeterminate="true" />
+        <MudText Class="mt-2">Fetching media info...</MudText>
+    </MudStack>
+}
+
+@if (Media != null)
+{
+    <MudDivider Class="mt-10"/>
+    <MudStack Row="true" Class="mt-10">
+        <img src="@(Media.Thumbnail)" alt="Media Thumbnail" style="width:120px; height:auto; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.2);"  />
+        <MudStack Class="ml-3">
+            <MudText Class="mt-2" Typo="@Typo.h6">@Media.Extractor</MudText>
+            <MudText Class="mt-2">@Media.Title</MudText>
+        </MudStack>
+    </MudStack>
+}
+
+@if (Media != null || FastRip)
+{
+    <MudButton Variant="Variant.Filled" Class="mt-10" Color="Color.Primary" FullWidth="true" @onclick="Download">Download</MudButton>
+}
+
+@if (Downloading)
+{
+    <MudStack Row="true" Class="mt-3">
+        <MudProgressCircular Color="Color.Default" Indeterminate="true" />
+        <MudText Class="mt-2">Downloading...</MudText>
+    </MudStack>
+}
+
+
+
+@code {
+    public bool ShowKeep;
+    public string Url { get; set; }
+    public string? ActiveUrl {get;set;} = null;
+    public MediaInfo? Media {get;set;} = null;
+    public bool Keep;
+    public bool FastRip;
+    public bool Return = true;
+    public bool Ongoing;
+    //public HubConnection? Connection {get;set;} = null;
+    public string ProgressMessage;
+    public MediaType MediaType;
+    public bool Downloading;
+
+    protected override async Task OnInitializedAsync()
+    {
+        ShowKeep = await Http.GetFromJsonAsync<bool>($"api/v2/permissions/{PermissionType.ManageApps}");
+    }
+//bro please i am so tired can frontend just autogenerate it would be so awesome
+    public async Task OnSearch()
+    {
+        if (Ongoing)
+            return;
+        
+        Ongoing = true;
+        ActiveUrl = Url;
+        Media = await Http.GetFromJsonAsync<MediaInfo?>($"api/v2/zorro/info?url={Uri.EscapeDataString(Url)}");
+        Ongoing = false;
+    }
+
+    public async Task EstablishConnection()
+    {
+        /*if (Connection != null)
+        {
+            if (ActiveUrl != null)
+                await Connection.InvokeAsync("LeaveGroup", ActiveUrl);
+
+            await Connection.InvokeAsync("JoinGroup", Url);
+            return;
+        }
+
+        Connection = new HubConnectionBuilder()
+                .WithUrl($"{Http.BaseAddress}zorro/hub")
+                .Build();
+
+        await Connection.StartAsync();
+        Connection.On<string>("ReceiveZorroProgress", OnReceivedProgress);
+        await Connection.InvokeAsync("JoinGroup", Url);*/
+    }
+
+    public void OnReceivedProgress(string msg)
+        => ProgressMessage = msg;
+
+    public async Task Download()
+    {
+        Downloading = true;
+        if (FastRip)
+            ActiveUrl = Url;
+
+        await EstablishConnection();
+
+        await DownloadFile($"api/v2/zorro/download?url={Uri.EscapeDataString(ActiveUrl)}&type={MediaType}&keep={Keep}&ret={Return}&noInfo={FastRip}");
+
+        Downloading = false;
+        //await Connection.InvokeAsync("LeaveGroup", ActiveUrl);
+    }
+
+    public async Task DownloadFile(string endpoint)
+    {
+        var response = await Http.GetAsync(endpoint, HttpCompletionOption.ResponseHeadersRead);
+
+        if (response.StatusCode == System.Net.HttpStatusCode.NoContent)
+            return;
+
+        response.EnsureSuccessStatusCode();
+
+        var bytes = await response.Content.ReadAsByteArrayAsync();
+        if (bytes.Length == 0)
+            return;
+
+        var base64 = Convert.ToBase64String(bytes);
+
+        var filename = "file";
+        var cd = response.Content.Headers.ContentDisposition;
+        if (cd != null)
+            filename = cd.FileNameStar ?? cd.FileName ?? filename;
+
+        filename = filename.Trim('\"');
+        var contentType = response.Content.Headers.ContentType?.MediaType ?? "application/octet-stream";
+
+        await JS.InvokeVoidAsync("eval", $@"
+            (function() {{
+                const link = document.createElement('a');
+                link.download = '{filename}';
+                link.href = 'data:{contentType};base64,{base64}';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }})()
+        ");
+    }
+}

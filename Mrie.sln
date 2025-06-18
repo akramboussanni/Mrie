@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mrie", "Mrie\Mrie.csproj", "{3C76C2D7-D348-4AE4-A883-021FC5B5D330}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mrie.Client", "Mrie.Client\Mrie.Client.csproj", "{D9751BEE-8F3C-4162-A55D-D28BA978A306}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mrie.Shared", "Mrie.Shared\Mrie.Shared.csproj", "{B68D22E6-E6CB-4E4E-B3E3-8267745C2C98}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{3C76C2D7-D348-4AE4-A883-021FC5B5D330}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3C76C2D7-D348-4AE4-A883-021FC5B5D330}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3C76C2D7-D348-4AE4-A883-021FC5B5D330}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3C76C2D7-D348-4AE4-A883-021FC5B5D330}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D9751BEE-8F3C-4162-A55D-D28BA978A306}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D9751BEE-8F3C-4162-A55D-D28BA978A306}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D9751BEE-8F3C-4162-A55D-D28BA978A306}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D9751BEE-8F3C-4162-A55D-D28BA978A306}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B68D22E6-E6CB-4E4E-B3E3-8267745C2C98}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B68D22E6-E6CB-4E4E-B3E3-8267745C2C98}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B68D22E6-E6CB-4E4E-B3E3-8267745C2C98}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B68D22E6-E6CB-4E4E-B3E3-8267745C2C98}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,34 @@
+﻿
+@using Mrie.Shared.Modals.Signups
+
+@inject HttpClient Http
+@inject ISnackbar Snackbar
+@inject NavigationManager Navigation
+
+<MudDialog>
+    <TitleContent>
+        Confirmation
+    </TitleContent>
+    <DialogContent>
+        Are you sure you want to reset all settings?
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton OnClick="Confirm" Variant="Variant.Filled" Color="Color.Primary">Reset</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] public IMudDialogInstance MudDialog { get; set; }
+    [Parameter] public string Endpoint { get; set; }
+    public void Cancel()
+        => MudDialog.Cancel();
+
+    public async Task Confirm()
+    {
+        if (Endpoint != "")
+            await Http.PostAsJsonAsync<object>(Endpoint, new());
+
+        MudDialog.Close();
+    }
+}

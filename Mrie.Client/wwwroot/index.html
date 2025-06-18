@@ -1,0 +1,8 @@
+<script>
+    Blazor.start().then(() => {
+        // Wait for app to fully render
+        setTimeout(() => {
+            document.getElementById('loading-screen')?.remove();
+        }, 100); // Small delay ensures rendering is complete
+    });
+</script>

@@ -1,0 +1,30 @@
+﻿@using Mrie.Shared.Modals.Signups
+
+@inject HttpClient Http
+@inject ISnackbar Snackbar
+@inject NavigationManager Navigation
+
+<MudDialog>
+    <TitleContent>
+        Avertissement
+    </TitleContent>
+    <DialogContent>
+        Cette fonctionnalité est en Beta, et pourrait ne pas fonctionner comme attendu. Pour des meilleurs résultats, donner des exemples ou instructions de calcul dans la section d'Instructions Supplémentaires.
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Désactiver</MudButton>
+        <MudButton OnClick="Confirm" Variant="Variant.Filled" Color="Color.Primary">J'ai compris</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] public IMudDialogInstance MudDialog { get; set; }
+
+    public void Cancel()
+        => MudDialog.Cancel();
+
+    public async Task Confirm()
+    {
+        MudDialog.Close();
+    }
+}

@@ -1,0 +1,36 @@
+﻿@page "/"
+@inject HttpClient Http
+
+<PageTitle>Home</PageTitle>
+
+<MudPaper Style="height:100vh" Elevation="0" Class="align-content-start flex-wrap flex-grow-1 gap-4">
+    <MudStack Justify="Justify.Center" AlignItems="AlignItems.Center" Style="height: 100vh;">
+        <div class="text-center">
+            <MudText Typo="Typo.h1" Class="mb-2">MRIE</MudText>
+            <MudText Typo="Typo.body1">Multipurpose Repository of Internet-accessible Essentials</MudText>
+        </div>
+    </MudStack>
+</MudPaper>
+
+<MudDivider></MudDivider>
+<MudSpacer></MudSpacer>
+<MudStack Class="pa-4 mt-9" Spacing="4">
+    <MudText Typo="Typo.h3">About</MudText>
+    <MudText Typo="Typo.body1">
+        <b>MRIE</b> (acronym for Multipurpose Repository of Internet-accessible Essentials) is a suite of self-developed tools hosted on a website (<i>hence the Internet-accessible part of the acronym</i>) for personal and public usage.
+        <br/><br/>
+        For access to Lab AIs and other features, please contact at <a style="color: dodgerblue" href= "mailto:mrie@akramb.com">mrie@akramb.com</a>
+    </MudText>
+</MudStack>
+<MudStack Class="pa-4 mt-9" Spacing="4">
+    <MudText Typo="Typo.h3">Available Tools</MudText>
+    <MudText Typo="Typo.body1">
+        MRIE currently contains these tools:
+        <li>LabRador AI</li>
+        <li>Prayer Times</li>
+        <li>URL Shortener (admin-only)</li>
+        <li>Config System (admin-only)</li>
+    </MudText>
+</MudStack>
+
+<MudText Typo="Typo.subtitle2" Class="mt-16">Ahmed Bouhlel 😎😎</MudText>

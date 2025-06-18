@@ -1,0 +1,15 @@
+﻿.full-screen {
+    height: 100vh;
+}
+
+.footer {
+    background-color: #333;
+    padding: 10px;
+    margin-top: 5px;
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+.lowercase-button {
+    text-transform: none;
+}
