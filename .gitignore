@@ -10,6 +10,7 @@ appsettings.Development.json
 mrie.zip
 publish.bat
 .VSCodeCounter
+*.db
 
 # dotenv files
 .env
