@@ -6,11 +6,12 @@ MRIE is a multipurpose web platform built to replace clunky, proprietary, or non
 
 ## 🛠️ Tech Stack
 
-- ASP.NET Core (.NET 9) + Identity
-- SignalR for real-time updates  
-- EF Core for database access
+- Built purely with **C#** and **razor pages**
+- **MudBlazor** for pretty UI
+- **ASP.NET Core** (.NET 9) + Identity
+- **SignalR** for real-time updates  
+- **EF Core** for database access
 - Modular, extensible APIs
-- MudBlazor for pretty UI
 
 
 ---
