@@ -47,7 +47,7 @@ Scrapes data from [Mawaqit](https://mawaqit.net) and exposes it via a public API
 
 - Converts times to UTC  
 - Reliable fallback when no API is exposed  
-- 🔗 [View Times](https://mrie.akramb.com/prayertimes/default)
+- 🔗 [View Times](https://mrie.dev/prayertimes/default)
 
 ---
 
