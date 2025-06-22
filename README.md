@@ -65,7 +65,7 @@ Zorro is a scalable media fetcher and downloader.
 Create redirect links quickly via the config panel.
 
 Example:  
-`https://mrie.akramb.com/test` → `https://google.com`
+`https://mrie.dev/test` → `https://google.com`
 
 ---
 
