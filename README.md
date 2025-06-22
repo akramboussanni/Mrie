@@ -1,6 +1,6 @@
 # 📦 MRIE - Multipurpose Repository of Internet-accessible Essentials
 
-🌐 **Live Site**: [https://mrie.akramb.com](https://mrie.akramb.com)
+🌐 **Live Site**: [mrie.dev](https://mrie.dev)
 Made with **C#**, **ASP.NET**, **MudBlazor**
 
 MRIE is a multipurpose web platform built to replace clunky, proprietary, or non-extensible tools with developer-friendly, self-hosted solutions.
