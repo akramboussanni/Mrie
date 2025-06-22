@@ -14,8 +14,8 @@ public abstract class HttpBinary : Binary
         { OSPlatform.Windows, BinaryFile },
         { OSPlatform.Linux, BinaryFile }
     };
-
     public virtual string SaveAs => GetPlatformDependant(SaveAsValues);
+    
     public string SavedTo => Path.Combine(BinaryFolder, SaveAs);
     protected static HttpClient HttpClient = new();
     public override void Install()

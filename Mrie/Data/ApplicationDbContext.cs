@@ -16,7 +16,6 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<LabRadorResponse> LabRadorGenerations { get; set; }
     public DbSet<AccessToken> AccessTokens { get; set; }
     
-
     public async Task<AppSettings> GetSettingsAsync()
     {
         var settings = await SettingsSet.FirstAsync();
