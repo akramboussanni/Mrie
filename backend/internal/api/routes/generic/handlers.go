@@ -192,6 +192,7 @@ func (gr *GenericRouter) HandleCreateUser(w http.ResponseWriter, r *http.Request
 		Email:        payload.Email,
 		PasswordHash: string(hashedPassword),
 		Role:         payload.Role,
+		ID:           utils.GenerateSnowflakeID(),
 	}
 
 	// Set custom creation timestamp if provided, otherwise use current time
