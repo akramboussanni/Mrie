@@ -1,2 +1,0 @@
-Everything within the Outdated folder is getting a rework or completion eventually.
-The code on it is not really clean, esp. API naming. But it is functional and I am not breaking them.

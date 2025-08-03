@@ -1,0 +1,2 @@
+-- This migration cannot be safely reversed
+-- The timestamps would be lost if we tried to revert 
