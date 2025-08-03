@@ -211,6 +211,65 @@ func (gr *GenericRouter) HandleCreateUser(w http.ResponseWriter, r *http.Request
 	api.WriteMessage(w, http.StatusCreated, "message", "User created successfully")
 }
 
+// @Summary Delete user
+// @Description Delete a user by ID (admin only)
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Security CookieAuth
+// @Param id path string true "User ID"
+// @Success 200 {object} api.SuccessResponse "User deleted successfully"
+// @Failure 400 {object} api.ErrorResponse "Invalid user ID"
+// @Failure 401 {object} api.ErrorResponse "Unauthorized"
+// @Failure 403 {object} api.ErrorResponse "Forbidden - requires admin role"
+// @Failure 404 {object} api.ErrorResponse "User not found"
+// @Failure 429 {object} api.ErrorResponse "Rate limit exceeded"
+// @Router /generic/users/{id} [delete]
+func (gr *GenericRouter) HandleDeleteUser(w http.ResponseWriter, r *http.Request) {
+	user, ok := utils.UserFromContext(r.Context())
+	if !ok {
+		applog.Error("Failed to get user from context")
+		api.WriteInternalError(w)
+		return
+	}
+
+	// Check if user has admin role
+	if user.Role != "admin" {
+		api.WriteMessage(w, http.StatusForbidden, "error", "Admin role required")
+		return
+	}
+
+	userID := chi.URLParam(r, "id")
+	if userID == "" {
+		api.WriteMessage(w, http.StatusBadRequest, "error", "User ID is required")
+		return
+	}
+
+	id, err := strconv.ParseInt(userID, 10, 64)
+	if err != nil {
+		api.WriteMessage(w, http.StatusBadRequest, "error", "Invalid user ID")
+		return
+	}
+
+	// Check if user exists before deleting
+	_, err = gr.UserRepo.GetUserByID(r.Context(), id)
+	if err != nil {
+		applog.Error("Failed to get user for deletion", "error", err)
+		api.WriteMessage(w, http.StatusNotFound, "error", "User not found")
+		return
+	}
+
+	// Delete the user
+	err = gr.UserRepo.DeleteUser(r.Context(), id)
+	if err != nil {
+		applog.Error("Failed to delete user", "error", err)
+		api.WriteInternalError(w)
+		return
+	}
+
+	api.WriteMessage(w, http.StatusOK, "message", "User deleted successfully")
+}
+
 // @Summary Check user permission
 // @Description Check if current user has a specific role
 // @Tags Permissions

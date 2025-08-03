@@ -2,8 +2,10 @@ package middleware
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/akramboussanni/gocode/config"
+	"github.com/rs/cors"
 )
 
 func SecurityHeaders(next http.Handler) http.Handler {
@@ -25,24 +27,33 @@ func SecurityHeaders(next http.Handler) http.Handler {
 }
 
 func CORSHeaders(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Credentials", "true")
+	var allowedOrigins []string
 
-		origin := r.Header.Get("Origin")
-		if origin != "" {
-			if config.App.FrontendCors == "*" || origin == config.App.FrontendCors {
-				w.Header().Set("Access-Control-Allow-Origin", origin)
-			}
+	if config.App.FrontendCors == "*" {
+		allowedOrigins = []string{"*"}
+	} else if strings.HasPrefix(config.App.FrontendCors, "*.") {
+		domain := strings.TrimPrefix(config.App.FrontendCors, "*.")
+		allowedOrigins = []string{
+			"https://" + domain,
+			"http://" + domain,
 		}
-
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With")
-
-		if r.Method == "OPTIONS" {
-			w.WriteHeader(http.StatusOK)
-			return
+		for _, subdomain := range []string{"www", "app", "api", "admin"} {
+			allowedOrigins = append(allowedOrigins,
+				"https://"+subdomain+"."+domain,
+				"http://"+subdomain+"."+domain,
+			)
 		}
+	} else {
+		allowedOrigins = []string{config.App.FrontendCors}
+	}
 
-		next.ServeHTTP(w, r)
+	c := cors.New(cors.Options{
+		AllowedOrigins:   allowedOrigins,
+		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Content-Type", "Authorization", "X-Requested-With", "X-Recaptcha-Token"},
+		AllowCredentials: true,
+		MaxAge:           86400, // 24 hours
 	})
+
+	return c.Handler(next)
 }

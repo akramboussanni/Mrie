@@ -88,6 +88,12 @@ class AdminService {
       body: JSON.stringify(data),
     });
   }
+
+  async deleteUser(userId: number): Promise<void> {
+    await this.makeRequest(`${config.generic.users}/${userId}`, {
+      method: 'DELETE',
+    });
+  }
 }
 
 export const adminService = new AdminService(); 

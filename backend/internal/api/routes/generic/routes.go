@@ -28,6 +28,7 @@ func NewGenericRouter(userRepo *repo.UserRepo, tokenRepo *repo.TokenRepo, appSet
 		r.Get("/users", gr.HandleGetAllUsers)
 		r.Get("/users/{id}", gr.HandleGetUser)
 		r.Post("/users", gr.HandleCreateUser)
+		r.Delete("/users/{id}", gr.HandleDeleteUser)
 	})
 
 	// 15/min + auth
