@@ -21,6 +21,14 @@ const Home = () => {
 
   const features = [
     {
+      name: "prayer times",
+      description: "islamic prayer time calculator",
+      icon: <Clock className="w-5 h-5" />,
+      status: "active",
+      active: true,
+      path: "/prayertimes/default"
+    },
+    {
       name: "zorro",
       description: "media ripper for downloading content",
       icon: <Scissors className="w-5 h-5" />,
@@ -35,14 +43,6 @@ const Home = () => {
       status: "in progress",
       active: false,
       path: null
-    },
-    {
-      name: "prayer times",
-      description: "islamic prayer time calculator",
-      icon: <Clock className="w-5 h-5" />,
-      status: "active",
-      active: true,
-      path: "/prayertimes/mosquee-de-paris"
     },
     {
       name: "labrador ai",

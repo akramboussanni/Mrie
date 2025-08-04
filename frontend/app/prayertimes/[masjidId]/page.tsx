@@ -22,6 +22,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
 import { prayerTimesService, MosqueInfo } from "@/lib/prayertimes";
 import { hasPermission, Permission, UserRole } from "@/lib/permissions";
+import { settingsService } from "@/lib/settings";
 
 interface PrayerTimesData {
   fajr: string;
@@ -83,10 +84,30 @@ function PrayerTimesContent() {
 
   useEffect(() => {
     if (!masjidId) return;
+    
+    // If masjidId is "default", redirect to the actual default masjid
+    if (masjidId === "default") {
+      const redirectToDefault = async () => {
+        try {
+          const defaultMasjid = await settingsService.getDefaultMasjid();
+          if (defaultMasjid) {
+            router.replace(`/prayertimes/${defaultMasjid}`);
+            return;
+          }
+        } catch (error) {
+          console.error('Failed to get default masjid:', error);
+        }
+        // Fallback to a known masjid if default is not available
+        router.replace('/prayertimes/mosquee-de-paris');
+      };
+      redirectToDefault();
+      return;
+    }
+    
     loadPrayerTimes();
     loadTomorrowPrayerTimes();
     loadAvailableMosques();
-  }, [masjidId]);
+  }, [masjidId, router]);
 
   useEffect(() => {
     if (!prayerTimes) return;
