@@ -9,16 +9,11 @@ import { Separator } from "@/components/ui/separator";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Home as HomeIcon, Scissors, Link, Clock, Bot, Heart, Building2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { prayerTimesService } from "@/lib/prayertimes";
-import { settingsService } from "@/lib/settings";
 
 const Home = () => {
   const router = useRouter();
   const { isAuthenticated, isLoading } = useAuth();
   const [isUnloading, setIsUnloading] = useState(false);
-  const [prayerTimes, setPrayerTimes] = useState<any>(null);
-  const [defaultMasjid, setDefaultMasjid] = useState<string | null>(null);
-  const [isLoadingPrayerTimes, setIsLoadingPrayerTimes] = useState(false);
 
   useEffect(() => {
     document.title = "home - mrie";
@@ -29,25 +24,33 @@ const Home = () => {
       name: "zorro",
       description: "media ripper for downloading content",
       icon: <Scissors className="w-5 h-5" />,
-      status: "active"
+      status: "in progress",
+      active: false,
+      path: null
     },
     {
       name: "url shortener",
       description: "create short, memorable links",
       icon: <Link className="w-5 h-5" />,
-      status: "active"
+      status: "in progress",
+      active: false,
+      path: null
     },
     {
       name: "prayer times",
       description: "islamic prayer time calculator",
       icon: <Clock className="w-5 h-5" />,
-      status: "active"
+      status: "active",
+      active: true,
+      path: "/prayertimes/mosquee-de-paris"
     },
     {
       name: "labrador ai",
       description: "intelligent assistant for various tasks",
       icon: <Bot className="w-5 h-5" />,
-      status: "beta"
+      status: "in progress",
+      active: false,
+      path: null
     }
   ];
 
@@ -55,39 +58,11 @@ const Home = () => {
     router.push('/login');
   };
 
-  const loadPrayerTimes = async () => {
-    if (!defaultMasjid) return;
-    
-    setIsLoadingPrayerTimes(true);
-    try {
-      const today = new Date();
-      const day = today.getDate();
-      const month = today.getMonth() + 1;
-      const times = await prayerTimesService.getPrayerTimes(defaultMasjid, day, month);
-      setPrayerTimes(times);
-    } catch (error) {
-      console.error('Failed to load prayer times:', error);
-    } finally {
-      setIsLoadingPrayerTimes(false);
+  const handleFeatureClick = (feature: any) => {
+    if (feature.active && feature.path) {
+      router.push(feature.path);
     }
   };
-
-  // Load default masjid and prayer times
-  useEffect(() => {
-    const loadDefaultMasjid = async () => {
-      try {
-        const masjid = await settingsService.getDefaultMasjid();
-        setDefaultMasjid(masjid);
-        if (masjid) {
-          await loadPrayerTimes();
-        }
-      } catch (error) {
-        console.error('Failed to load default masjid:', error);
-      }
-    };
-
-    loadDefaultMasjid();
-  }, []);
 
   // Show loading while checking authentication
   if (isLoading) {
@@ -100,8 +75,6 @@ const Home = () => {
       </div>
     );
   }
-
-
 
   return (
     <PageWrapper>
@@ -184,10 +157,19 @@ const Home = () => {
               className="transition-all duration-500 ease-out"
               style={{ transitionDelay: `${600 + index * 100}ms` }}
             >
-              <Card className="border-cottage-warm bg-cottage-cream card-hover-lift h-full">
+              <Card 
+                className={`border-cottage-warm bg-cottage-cream card-hover-lift h-full ${
+                  feature.active 
+                    ? 'cursor-pointer hover:shadow-lg hover:scale-105' 
+                    : 'opacity-60 cursor-not-allowed'
+                }`}
+                onClick={() => handleFeatureClick(feature)}
+              >
                 <CardHeader className="pb-3">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 bg-cottage-warm rounded-lg">
+                    <div className={`p-2 rounded-lg ${
+                      feature.active ? 'bg-cottage-warm' : 'bg-gray-300'
+                    }`}>
                       {feature.icon}
                     </div>
                     <div className="flex-1">
@@ -207,82 +189,16 @@ const Home = () => {
                   <CardDescription className="text-muted-foreground">
                     {feature.description}
                   </CardDescription>
+                  {!feature.active && (
+                    <p className="text-xs text-muted-foreground mt-2 italic">
+                      coming soon
+                    </p>
+                  )}
                 </CardContent>
               </Card>
             </div>
           ))}
         </div>
-
-        {/* Prayer Times Section */}
-        {defaultMasjid && (
-          <div className="mt-16">
-            <div className="text-center mb-8">
-              <h2 className="text-3xl font-semibold text-foreground font-serif mb-2">prayer times</h2>
-              <p className="text-muted-foreground">today's prayer times</p>
-            </div>
-            
-            <Card className="border-cottage-warm bg-cottage-cream card-hover-lift max-w-2xl mx-auto">
-              <CardHeader>
-                <div className="flex items-center space-x-3">
-                  <Building2 className="w-6 h-6 text-cottage-brown" />
-                  <CardTitle className="text-xl font-serif text-cottage-brown">
-                    {defaultMasjid}
-                  </CardTitle>
-                </div>
-                <CardDescription>
-                  {new Date().toLocaleDateString('en-US', {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                  })}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {isLoadingPrayerTimes ? (
-                  <div className="text-center py-8">
-                    <div className="w-8 h-8 border-2 border-cottage-brown border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                    <p className="text-muted-foreground">loading prayer times...</p>
-                  </div>
-                ) : prayerTimes ? (
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    {[
-                      { name: 'fajr', time: prayerTimes.fajr, icon: '🌅' },
-                      { name: 'shuruq', time: prayerTimes.shuruq, icon: '☀️' },
-                      { name: 'dhuhr', time: prayerTimes.dhuhr, icon: '☀️' },
-                      { name: 'asr', time: prayerTimes.asr, icon: '🌤️' },
-                      { name: 'maghreb', time: prayerTimes.maghreb, icon: '🌅' },
-                      { name: 'isha', time: prayerTimes.isha, icon: '🌙' }
-                    ].map((prayer) => (
-                      <div key={prayer.name} className="text-center p-3 rounded-lg border border-cottage-warm bg-background">
-                        <div className="text-2xl mb-2">{prayer.icon}</div>
-                        <p className="font-medium capitalize text-sm mb-1">{prayer.name}</p>
-                        <p className="font-mono text-lg">
-                          {new Date(prayer.time).toLocaleTimeString('en-US', {
-                            hour: '2-digit',
-                            minute: '2-digit',
-                            hour12: true
-                          })}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <p className="text-muted-foreground">failed to load prayer times</p>
-                    <Button 
-                      onClick={loadPrayerTimes}
-                      variant="outline"
-                      className="mt-4 border-cottage-warm text-cottage-brown hover:bg-cottage-warm"
-                    >
-                      try again
-                    </Button>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        )}
       </div>
     </PageWrapper>
   );

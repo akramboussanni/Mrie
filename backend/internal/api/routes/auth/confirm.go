@@ -69,7 +69,7 @@ func (ar *AuthRouter) HandleConfirmEmail(w http.ResponseWriter, r *http.Request)
 	}
 
 	applog.Info("Email confirmed successfully", "userID:", user.ID)
-	w.WriteHeader(http.StatusOK)
+	api.WriteMessage(w, 200, "message", "email confirmed successfully")
 }
 
 // @Summary Resend email confirmation

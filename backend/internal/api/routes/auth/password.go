@@ -99,7 +99,7 @@ func (ar *AuthRouter) HandleForgotPassword(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
+	api.WriteMessage(w, 200, "message", "password reset successful")
 }
 
 // @Summary Request password reset email
@@ -185,5 +185,5 @@ func (ar *AuthRouter) HandleChangePassword(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
+	api.WriteMessage(w, 200, "message", "password changed successfully")
 }

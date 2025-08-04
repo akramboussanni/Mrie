@@ -53,48 +53,42 @@ class AuthService {
     options: RequestInit = {}
   ): Promise<T> {
     const url = getApiUrl(endpoint);
-    const response = await fetch(url, {
-      ...options,
-      credentials: 'include', // for cookies
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
-    });
+    
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+    
+    try {
+      const response = await fetch(url, {
+        ...options,
+        credentials: 'include', // for cookies
+        headers: {
+          'Content-Type': 'application/json',
+          ...options.headers,
+        },
+        signal: controller.signal,
+      });
 
-    if (!response.ok) {
-      // If we get a 401, try to refresh the token
-      if (response.status === 401 && endpoint !== config.auth.refresh) {
-        try {
-          await this.refresh();
-          // Retry the original request
-          const retryResponse = await fetch(url, {
-            ...options,
-            credentials: 'include',
-            headers: {
-              'Content-Type': 'application/json',
-              ...options.headers,
-            },
-          });
-          
-          if (!retryResponse.ok) {
-            const errorData = await retryResponse.json().catch(() => ({ error: 'unknown error' }));
-            throw new Error(errorData.error || `http error ${retryResponse.status}`);
-          }
-          
-          return retryResponse.json();
-        } catch (refreshError) {
-          // If refresh fails, throw the original error
-          const errorData = await response.json().catch(() => ({ error: 'unknown error' }));
-          throw new Error(errorData.error || `http error ${response.status}`);
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        // For 401 errors, just throw immediately without retry logic
+        if (response.status === 401) {
+          const errorData = await response.json().catch(() => ({ error: 'unauthorized' }));
+          throw new Error(errorData.error || 'unauthorized');
         }
+        
+        const errorData = await response.json().catch(() => ({ error: 'unknown error' }));
+        throw new Error(errorData.error || `http error ${response.status}`);
       }
-      
-      const errorData = await response.json().catch(() => ({ error: 'unknown error' }));
-      throw new Error(errorData.error || `http error ${response.status}`);
-    }
 
-    return response.json();
+      return response.json();
+    } catch (error) {
+      clearTimeout(timeoutId);
+      if (error.name === 'AbortError') {
+        throw new Error('Request timed out');
+      }
+      throw error;
+    }
   }
 
   private startRefreshTimer() {
