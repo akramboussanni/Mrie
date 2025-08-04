@@ -71,7 +71,6 @@ function PrayerTimesContent() {
   const [error, setError] = useState<string | null>(null);
   const [availableMosques, setAvailableMosques] = useState<MosqueInfo[]>([]);
   
-  const { user, isAuthenticated } = useAuth();
   const { toast } = useToast();
   const router = useRouter();
   const params = useParams();
@@ -308,7 +307,6 @@ function PrayerTimesContent() {
     return { midnight, lastThird, nightLabel };
   };
 
-  if (!user) return <div>Loading...</div>;
   if (error) return <div>Error: {error}</div>;
   if (isLoading || !prayerTimes) return <div>Loading prayer times...</div>;
 
