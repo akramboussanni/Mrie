@@ -1,5 +1,8 @@
 # 📦 MRIE - Multipurpose Repository of Internet-accessible Essentials
 
+# Rewrite
+The app is being rewritten with Go + TypeScript. It is the currently deployed live version. Check the "rewrite" branch for the V2.
+
 🌐 **Live Site**: [mrie.dev](https://mrie.dev)
 Made with **C#**, **ASP.NET**, **MudBlazor**
 
